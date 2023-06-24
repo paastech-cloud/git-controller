@@ -62,6 +62,19 @@ impl GitRepoManager for GitRepoManagerService {
             return Err(Status::unknown("Failed adding post-receive hook"));
         }
 
+        // Make the hook file executable
+        if Command::new("sh")
+            .arg("-c")
+            .arg(format!(
+                "chmod +x {}/hooks/post-receive",
+                new_repo_path.clone()
+            ))
+            .output()
+            .is_err()
+        {
+            return Err(Status::unknown("Failed making post-receive hook executable"));
+        }
+        
         let reply = RepositoryResponse {
             message: format!("Created repository {}", request_data.repository_path).to_owned(),
         };
