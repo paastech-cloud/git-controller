@@ -49,6 +49,19 @@ impl GitRepoManager for GitRepoManagerService {
             return Err(Status::unknown("Failed initializing repository"));
         }
 
+        // add post-receive hook
+        if Command::new("sh")
+            .arg("-c")
+            .arg(format!(
+                "cp ./hooks/post-receive {}",
+                format!("{}/hooks/", new_repo_path.clone())
+            ))
+            .output()
+            .is_err()
+        {
+            return Err(Status::unknown("Failed adding post-receive hook"));
+        }
+
         let reply = RepositoryResponse {
             message: format!("Created repository {}", request_data.repository_path).to_owned(),
         };
