@@ -1,8 +1,12 @@
 [package]
-name = "ssh-keys-fuse"
+name = "fuse-authorized-keys"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+async-trait = "0.1.68"
+dotenvy = "0.15.7"
+fuser = "0.12.0"
+libc = "0.2.146"
+sqlx = { version = "0.6.3", features = [ "postgres", "runtime-tokio-rustls" ] }
+tokio = { version = "1.28.2", features = [ "macros" ] }
