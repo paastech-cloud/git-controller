@@ -1,60 +1,41 @@
+mod constants;
+mod utils;
+
 use std::process::{exit, Command};
 
-#[derive(Debug, PartialEq)]
-struct Acl {
-    user: String,
-    repo: String,
-}
+use utils::{check_user_repository_access, get_repo_name};
 
-fn main() {
-    let key = "SSH_ORIGINAL_COMMAND";
+use crate::constants::{NOT_FOUND_ERROR, UNEXPECTED_ERROR};
 
+#[tokio::main]
+async fn main() {
     // Extract args there should be the command itself and a string to identify the user
     let args: Vec<String> = std::env::args().collect();
     if args.len() != 2 {
-        eprintln!("[paastech] Unexpected error");
+        eprintln!("{}", &UNEXPECTED_ERROR);
         exit(1);
     }
 
-    // Acls for demo purpose
-    let acls: Vec<Acl> = vec![
-        Acl {
-            user: "userA".to_string(),
-            repo: "/srv/git/repoA.git".to_string(),
-        },
-        Acl {
-            user: "userB".to_string(),
-            repo: "/srv/git/repoB.git".to_string(),
-        },
-    ];
+    let repository_path = get_repo_name();
+    let user_id: i32 = args[1].parse().unwrap();
 
-    // Extract ssh_command
-    let raw_ssh_command = std::env::var(key).unwrap_or_else(|_| {
-        eprintln!("[paastech] Unexpected error");
-        std::process::exit(1);
-    });
-
-    let ssh_command = Vec::from_iter(raw_ssh_command.split_whitespace());
-
-    // Checks if the command executed when connecting over ssh is git-receive-pack
-    if ssh_command.len() != 2 || ssh_command[0] != "git-receive-pack" {
-        eprintln!("[paastech] Bad request, you can only access this server via the git cli");
-        exit(1);
-    }
-
-    let acl = Acl {
-        user: args[1].to_owned(),
-        repo: ssh_command[1].to_owned().replace('\'', ""),
+    // query database
+    let repository_name = repository_path.replace("/srv/", "");
+    match check_user_repository_access(user_id, repository_name).await {
+        Ok(_) => {
+            // Execute git-receive-pack
+            Command::new("git-receive-pack")
+                .arg(&repository_path)
+                .status()
+                .ok();
+        }
+        Err(sqlx::Error::RowNotFound) => {
+            eprintln!("{}", &NOT_FOUND_ERROR);
+            exit(1);
+        }
+        Err(_) => {
+            eprintln!("{}", &UNEXPECTED_ERROR);
+            exit(1);
+        }
     };
-
-    if !acls.contains(&acl) {
-        eprintln!("[paastech] Forbidden");
-        exit(1);
-    }
-
-    // Execute git-receive-pack
-    Command::new("git-receive-pack")
-        .arg(&acl.repo)
-        .status()
-        .ok();
 }
