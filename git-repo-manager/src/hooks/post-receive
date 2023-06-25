@@ -1,11 +1,11 @@
 #!/bin/sh
 
-# Variables
-APP_NAME="my-app"
-BUILD_DIR="/path/to/build/directory"
-REGISTRY_URL="your-private-registry-url"
-REGISTRY_USERNAME="your-registry-username"
-REGISTRY_PASSWORD="your-registry-password"
+# Variables needed for the build
+# APP_NAME="my-app"
+# BUILD_DIR="/path/to/build/directory"
+# REGISTRY_URL="your-private-registry-url"
+# REGISTRY_USERNAME="your-registry-username"
+# REGISTRY_PASSWORD="your-registry-password"
 
 # Change to the build directory
 cd "$BUILD_DIR"
