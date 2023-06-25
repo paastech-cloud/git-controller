@@ -16,8 +16,14 @@ async fn main() {
         exit(1);
     }
 
-    let repository_path = get_repo_name();
     let user_id: i32 = args[1].parse().unwrap();
+    let repository_path = match get_repo_name() {
+        Some(value) => value,
+        None => {
+            eprintln!("{}", UNEXPECTED_ERROR);
+            exit(1);
+        }
+    };
 
     // query database
     let repository_name = repository_path.replace("/srv/", "");

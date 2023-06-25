@@ -1,24 +1,27 @@
-use std::process::exit;
+use crate::constants::SSH_ORIGINAL_COMMAND_KEY;
 
-use crate::constants::{SSH_ORIGINAL_COMMAND_KEY, UNEXPECTED_ERROR};
+use regex::Regex;
 use sqlx::postgres::PgConnectOptions;
 use sqlx::ConnectOptions;
 
-pub fn get_repo_name() -> String {
-    // Extract ssh_command
-    let raw_ssh_command = std::env::var(SSH_ORIGINAL_COMMAND_KEY).unwrap_or_else(|_| {
-        eprintln!("{}", &UNEXPECTED_ERROR);
-        exit(1);
-    });
+/// Returns the repository name if present.
+/// When the binary is executed when connecting to the server over ssh, ssh adds the SSH_ORIGINAL_COMMAND
+/// it is supposed to be "git-receive-pack <repo_name>" if it is, extract the repo name and return it
+/// otherwise return None
+pub fn get_repo_name() -> Option<String> {
+    // regex to check if command is
+    let regex = Regex::new(r#"/^git-receive-pack\s\/srv\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/"#).unwrap();
 
-    // get repo name
-    match raw_ssh_command.split_whitespace().last() {
-        Some(value) => value.to_owned(),
-        None => {
-            eprintln!("{}", &UNEXPECTED_ERROR);
-            exit(1);
+    // Extract ssh_command
+    if let Some(ssh_command) = std::env::var(SSH_ORIGINAL_COMMAND_KEY).ok() {
+        if !regex.is_match(&ssh_command) {
+            return None;
         }
+
+        return Some(ssh_command.split(" ").last().unwrap().to_owned());
     }
+
+    None
 }
 
 pub async fn check_user_repository_access(
