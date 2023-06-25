@@ -1,4 +1,8 @@
-use crate::constants::SSH_ORIGINAL_COMMAND_KEY;
+use std::env;
+
+use crate::constants::{
+    DB_HOST_KEY, DB_NAME_KEY, DB_PASSWORD_KEY, DB_PORT_KEY, DB_USER_KEY, SSH_ORIGINAL_COMMAND_KEY,
+};
 
 use regex::Regex;
 use sqlx::postgres::PgConnectOptions;
@@ -44,11 +48,11 @@ pub async fn check_user_repository_access(
     repository_name: String,
 ) -> Result<bool, sqlx::Error> {
     let mut connection = PgConnectOptions::new()
-        .username("paastech")
-        .password("paastech")
-        .host("localhost")
-        .port(5432)
-        .database("paatech")
+        .username(&env::var(DB_USER_KEY).unwrap())
+        .password(&env::var(DB_PASSWORD_KEY).unwrap())
+        .host(&env::var(DB_HOST_KEY).unwrap())
+        .port(env::var(DB_PORT_KEY).unwrap().parse().unwrap())
+        .database(&env::var(DB_NAME_KEY).unwrap())
         .connect()
         .await?;
 
