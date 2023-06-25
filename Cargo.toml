@@ -4,5 +4,6 @@ resolver = "2"
 members = [
     "git-auth-layer",
     "git-repo-manager",
+    "grpc-client-debug",
     "ssh-keys-fuse"
 ]
