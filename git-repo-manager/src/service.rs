@@ -55,7 +55,7 @@ impl GitRepoManager for GitRepoManagerService {
         if Command::new("sh")
             .arg("-c")
             .arg(format!(
-                "ln -s /home/git/bin/post-receive {}/.git/hooks/post-receive",
+                "ln -s /$HOME/git-controller/hooks/post-receive {}/hooks/post-receive",
                 new_repo_path.clone()
             ))
             .output()

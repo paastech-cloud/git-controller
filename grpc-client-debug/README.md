@@ -7,6 +7,5 @@ This is a simple example of a gRPC client written in Rust using the paastech_pro
 To run the example, first make sur to have started the gRPC server then run the following command:
 
 ```bash
-cargo build
 cargo run
 ```
