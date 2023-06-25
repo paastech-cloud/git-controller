@@ -2,8 +2,8 @@
 
 ## Description
 
-Git repo manager is a service to provide a simple way to manage git repositories and ssh keys on a machine.
-The communication between the client and the server is done via a GRPC Protocol.
+Git repo manager is a service to provide a simple way to manage git repositories on a machine.
+The communication between the client and the server is done via a GRPC Protocol. Here is the server implementation.
 
 [Tonic](https://github.com/hyperium/tonic) is used as the GRPC framework allowing the client to be written in any language that supports GRPC. Tonic provides the necessary tools and libraries to implement and interact with gRPC services. It allows you to define gRPC APIs, generate code from Protocol Buffers, and build both gRPC servers and clients.
 

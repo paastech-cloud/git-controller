@@ -3,5 +3,6 @@
 members = [
     "git-auth-layer",
     "git-repo-manager",
+    "grpc-client-debug",
     "ssh-keys-fuse"
 ]

@@ -55,26 +55,23 @@ impl GitRepoManager for GitRepoManagerService {
         if Command::new("sh")
             .arg("-c")
             .arg(format!(
-                "ln -s ./hooks/post-receive {}/.git/hooks/post-receive",
+                "ln -s /home/git/bin/post-receive {}/.git/hooks/post-receive",
                 new_repo_path.clone()
             ))
             .output()
             .is_err()
         {
-            return Err(Status::unknown("Failed adding post-receive hook"));
-        }
+         // clean up the repository if it fails rollback and return error otherwise continue
+            if Command::new("sh")
+                .arg("-c")
+                .arg(format!("rm -rf {}", new_repo_path.clone()))
+                .output()
+                .is_err()
+            {
+                return Err(Status::unknown("Failed cleaning up repository"));
+            }
 
-        // Make the hook file executable
-        if Command::new("sh")
-            .arg("-c")
-            .arg(format!(
-                "chmod +x {}/.git/hooks/post-receive",
-                new_repo_path.clone()
-            ))
-            .output()
-            .is_err()
-        {
-            return Err(Status::unknown("Failed making post-receive hook executable"));
+            return Err(Status::unknown("Failed adding post-receive hook"));
         }
         
         let reply = RepositoryResponse {
