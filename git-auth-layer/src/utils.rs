@@ -24,6 +24,21 @@ pub fn get_repo_name() -> Option<String> {
     None
 }
 
+/// Returns wether the user has access to the repository, meaning there exists a row in the projects
+/// table with given repository_name and user_id.
+///
+/// Returns `sqlx::Error` if there is any of these issues :
+///
+/// * couldn't connect to database
+///
+/// * couldn't find the row which returns `sqlx::Error::RowNotFound`
+///
+/// # Arguments
+///
+/// * `name` - An integer representing the user_id in the database
+///
+/// * `repository_name` - The repository name the user is trying to access
+///
 pub async fn check_user_repository_access(
     user_id: i32,
     repository_name: String,
