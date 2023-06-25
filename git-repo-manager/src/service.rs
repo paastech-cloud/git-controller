@@ -23,6 +23,8 @@ impl GitRepoManager for GitRepoManagerService {
         &self,
         request: Request<RepositoryRequest>,
     ) -> GitSproutResult<RepositoryResponse> {
+
+        // Get the request data
         let request_data = request.into_inner();
 
         let new_repo_path = format!(
@@ -49,12 +51,12 @@ impl GitRepoManager for GitRepoManagerService {
             return Err(Status::unknown("Failed initializing repository"));
         }
 
-        // add post-receive hook
+        // add post-receive hook : le lien symbolique peut être remplacé
         if Command::new("sh")
             .arg("-c")
             .arg(format!(
-                "cp ./hooks/post-receive {}",
-                format!("{}/hooks/", new_repo_path.clone())
+                "ln -s ./hooks/post-receive {}/.git/hooks/post-receive",
+                new_repo_path.clone()
             ))
             .output()
             .is_err()
@@ -66,7 +68,7 @@ impl GitRepoManager for GitRepoManagerService {
         if Command::new("sh")
             .arg("-c")
             .arg(format!(
-                "chmod +x {}/hooks/post-receive",
+                "chmod +x {}/.git/hooks/post-receive",
                 new_repo_path.clone()
             ))
             .output()
