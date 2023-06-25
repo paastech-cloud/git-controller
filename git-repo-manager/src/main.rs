@@ -7,8 +7,10 @@ use tonic::transport::Server;
 
 fn load_env_into_config() -> GitRepoManagerServiceConfig {
     let git_repository_base_path_key = "GITSPROUT_GIT_REPOSITORY_BASE_PATH";
+    let githook_base_path_key = "GITSPROUT_GITHOOK_BASE_PATH";
     GitRepoManagerServiceConfig {
         git_repository_base_path: std::env::var(git_repository_base_path_key).unwrap(),
+        githook_base_path: std::env::var(githook_base_path_key).unwrap(),
     }
 }
 

@@ -8,6 +8,7 @@ use tonic::{Request, Response, Status};
 #[derive(Debug, Default)]
 pub struct GitRepoManagerServiceConfig {
     pub git_repository_base_path: String,
+    pub githook_base_path: String,
 }
 
 #[derive(Debug, Default)]
@@ -24,8 +25,11 @@ impl GitRepoManager for GitRepoManagerService {
         request: Request<RepositoryRequest>,
     ) -> GitSproutResult<RepositoryResponse> {
 
+        
         // Get the request data
         let request_data = request.into_inner();
+
+        // Create the full path to the repository
 
         let new_repo_path = format!(
             "{}/{}",
@@ -55,13 +59,15 @@ impl GitRepoManager for GitRepoManagerService {
         if Command::new("sh")
             .arg("-c")
             .arg(format!(
-                "ln -s /$HOME/git-controller/hooks/post-receive {}/hooks/post-receive",
-                new_repo_path.clone()
+                "ln -s {}/hooks/post-receive {}/hooks/post-receive",
+                self.config.githook_base_path.clone(),
+                new_repo_path.clone(),
+
             ))
             .output()
             .is_err()
         {
-         // clean up the repository if it fails rollback and return error otherwise continue
+            // clean up the repository if it fails rollback and return error otherwise continue
             if Command::new("sh")
                 .arg("-c")
                 .arg(format!("rm -rf {}", new_repo_path.clone()))
@@ -73,7 +79,7 @@ impl GitRepoManager for GitRepoManagerService {
 
             return Err(Status::unknown("Failed adding post-receive hook"));
         }
-        
+
         let reply = RepositoryResponse {
             message: format!("Created repository {}", request_data.repository_path),
         };
