@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=paastech
+      - POSTGRES_PASSWORD=paastech
+      - POSTGRES_DB=paastech
+    ports:
+      - "5432:5432"
+    volumes:
+      - "paastech:/var/lib/postgresql/data"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 125M
+
+volumes:
+  paastech:
