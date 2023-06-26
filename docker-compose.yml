@@ -2,7 +2,7 @@ services:
   git-repo-manager:
     restart: always
     build:
-      context: .
+      context: ./git-repo-manager/
       dockerfile: dockerfile
     ports:
-      - ${GITSPROUT_SERVER_PORT?:error}:${GITSPROUT_SERVER_PORT?:error}
+      - "50051:50051"

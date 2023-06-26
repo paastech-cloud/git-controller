@@ -1,14 +1,16 @@
-FROM rust:1.67
+# Rust project
+FROM rust:1-slim-bookworm
 
+# prepare workspace
+WORKDIR /app
+COPY . .
 
-COPY . ./srv/git-repo-manager
-
-WORKDIR ./srv/git-repo-manager
-
+# install necessary dependency
 RUN apt-get update
+RUN apt-get install -y protobuf-compiler
 
-RUN apt install -y protobuf-compiler
-
+# build
 RUN cargo build --release
 
-CMD ["./target/release/git-repo-manager"]
+# run the binary
+CMD ["/app/target/release/git-repo-manager"]
