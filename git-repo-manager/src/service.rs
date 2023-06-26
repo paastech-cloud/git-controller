@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::Path;
 use std::process::Command;
 
 use paastech_proto::gitrepomanager::git_repo_manager_server::GitRepoManager;
@@ -24,8 +25,6 @@ impl GitRepoManager for GitRepoManagerService {
         &self,
         request: Request<RepositoryRequest>,
     ) -> GitSproutResult<RepositoryResponse> {
-
-        
         // Get the request data
         let request_data = request.into_inner();
 
@@ -55,18 +54,29 @@ impl GitRepoManager for GitRepoManagerService {
             return Err(Status::unknown("Failed initializing repository"));
         }
 
-        // add post-receive hook : le lien symbolique peut être remplacé
-        if Command::new("sh")
-            .arg("-c")
-            .arg(format!(
-                "ln -s {}/hooks/post-receive {}/hooks/post-receive",
-                self.config.githook_base_path.clone(),
-                new_repo_path.clone(),
+        let hook_path = format!(
+            "{}/hooks/post-receive",
+            self.config.githook_base_path.clone()
+        );
 
-            ))
-            .output()
-            .is_err()
-        {
+        let hook_path_exists = Path::new(&hook_path).exists();
+
+        if hook_path_exists {
+            // Le chemin existe, vous pouvez lancer la commande
+            if Command::new("sh")
+                .arg("-c")
+                .arg(format!(
+                    "ln -s {}/hooks/post-receive {}/hooks/post-receive",
+                    self.config.githook_base_path.clone(),
+                    new_repo_path.clone(),
+                ))
+                .output()
+                .is_err()
+            {
+                return Err(Status::unknown("Failed to create symbolic links"));
+            }
+            
+        } else {
             // clean up the repository if it fails rollback and return error otherwise continue
             if Command::new("sh")
                 .arg("-c")
@@ -77,7 +87,7 @@ impl GitRepoManager for GitRepoManagerService {
                 return Err(Status::unknown("Failed cleaning up repository"));
             }
 
-            return Err(Status::unknown("Failed adding post-receive hook"));
+            return Err(Status::unknown("Failed hooks path to post-receive file doesn't exist"));
         }
 
         let reply = RepositoryResponse {

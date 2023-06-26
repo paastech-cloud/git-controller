@@ -1,6 +1,6 @@
-use std::io;
 use paastech_proto::gitrepomanager::git_repo_manager_client::GitRepoManagerClient;
 use paastech_proto::gitrepomanager::RepositoryRequest;
+use std::io;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -26,4 +26,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
