@@ -18,6 +18,7 @@ use std::usize;
 
 const TTL: Duration = Duration::from_secs(1); // 1 second
 
+// définition du fichier .ssh
 const DOT_SSH_DIR_ATTR: FileAttr = FileAttr {
     ino: 1,
     size: 0,
@@ -36,9 +37,12 @@ const DOT_SSH_DIR_ATTR: FileAttr = FileAttr {
     blksize: 512,
 };
 
+// definition du fichier .ssh/authorized_keys
+// TODO rendre ca dynamique
 const AUTHORIZED_KEYS_ATTR: FileAttr = FileAttr {
     ino: 2,
-    size: 90,
+    // important pour read le fichier, quand on cat par exemple, le buffer pour lire est de la taille spécifiée ici.
+    size: 5,
     blocks: 1,
     atime: UNIX_EPOCH, // 1970-01-01 00:00:00
     mtime: UNIX_EPOCH,
@@ -61,24 +65,26 @@ struct SshKey {
 }
 
 #[async_trait]
-trait HelloFSTrait {
+trait PostgresFSTrait {
     async fn query_content(&self) -> Result<Vec<SshKey>, Error>;
     async fn get_content(&self) -> String;
     async fn get_content_size(&self) -> usize;
 }
 
-struct HelloFS {
+struct PostgresFS {
     pub git_auth_binary_path: String,
-    pub connection_pool: PgPool,
+    // pub connection_pool: PgPool,
 }
 
 #[async_trait]
-impl HelloFSTrait for HelloFS {
+impl PostgresFSTrait for PostgresFS {
+    /// Query
     async fn query_content(&self) -> Result<Vec<SshKey>, Error> {
         sqlx::query_as::<_, SshKey>("SELECT user_id, value FROM ssh_keys;")
             .fetch_all(&self.connection_pool)
             .await
     }
+    /// Build le contenu du fichier à partir de la requête
     async fn get_content(&self) -> String {
         let content: Vec<SshKey> = match self.query_content().await {
             Ok(content) => content,
@@ -96,12 +102,13 @@ impl HelloFSTrait for HelloFS {
 
         result
     }
+    /// Récupérer la taille de authorized keys
     async fn get_content_size(&self) -> usize {
         self.get_content().await.len()
     }
 }
 
-impl Filesystem for HelloFS {
+impl Filesystem for PostgresFS {
     fn lookup(&mut self, _req: &Request, parent: u64, name: &OsStr, reply: ReplyEntry) {
         if parent == 1 && name.to_str() == Some("authorized_keys") {
             reply.entry(&TTL, &AUTHORIZED_KEYS_ATTR, 0);
@@ -130,7 +137,8 @@ impl Filesystem for HelloFS {
         reply: ReplyData,
     ) {
         if ino == 2 {
-            reply.data(&self.get_content().await.as_bytes()[offset as usize..]);
+            // reply.data(&self.get_content().await.as_bytes()[offset as usize..]);
+            reply.data(&"hello_world".as_bytes()[offset as usize..]);
         } else {
             reply.error(ENOENT);
         }
@@ -165,31 +173,33 @@ impl Filesystem for HelloFS {
     }
 }
 
+// TODO SQL SYNC OU ASYNC FUSE
+// Dockerisation possible ? pas sur
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
     dotenv().ok();
 
     let mountpoint = std::env::var(MOUNTPOINT_KEY).unwrap();
 
-    let connection_url = format!(
-        "postgres://{}:{}@{}/{}",
-        std::env::var(DB_USER_KEY).unwrap(),
-        std::env::var(DB_PASSWORD_KEY).unwrap(),
-        std::env::var(DB_HOST_KEY).unwrap(),
-        std::env::var(DB_NAME_KEY).unwrap()
-    );
+    // let connection_url = format!(
+    //     "postgres://{}:{}@{}/{}",
+    //     std::env::var(DB_USER_KEY).unwrap(),
+    //     std::env::var(DB_PASSWORD_KEY).unwrap(),
+    //     std::env::var(DB_HOST_KEY).unwrap(),
+    //     std::env::var(DB_NAME_KEY).unwrap()
+    // );
 
-    let hello_fs = HelloFS {
-        connection_pool: PgPoolOptions::new()
-            .max_connections(5)
-            .connect(&connection_url)
-            .await?,
+    let hello_fs = PostgresFS {
+        // connection_pool: PgPoolOptions::new()
+        //     .max_connections(5)
+        //     .connect(&connection_url)
+        //     .await?,
         git_auth_binary_path: std::env::var(GIT_AUTH_BIN_PATH_KEY).unwrap(),
     };
 
-    let _: (i32,) = sqlx::query_as("SELECT 1")
-        .fetch_one(&hello_fs.connection_pool)
-        .await?;
+    // let _: (i32,) = sqlx::query_as("SELECT 1")
+    //     .fetch_one(&hello_fs.connection_pool)
+    //     .await?;
 
     fuser::mount2(hello_fs, mountpoint, &[MountOption::AutoUnmount]).unwrap();
 
