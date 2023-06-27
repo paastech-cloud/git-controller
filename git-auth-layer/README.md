@@ -44,10 +44,11 @@ For more information : [OpenSSH Documentation](https://man.openbsd.org/sshd.8#co
 
 ## How do I test it ?
 
-### Get in the directory
+### Access the project
 
 ```bash
-cd git-auth-layer
+git clone git@github.com:paastech-cloud/git-controller.git
+cd git-controller/git-auth-layer
 ```
 
 ### Initialize ssh configuration files
@@ -70,4 +71,43 @@ This will start 4 containers :
 docker compose up -d
 ```
 
-###
+### Add the database migrations and data
+
+This will add the migrations to the database
+
+```bash
+cd ../..
+
+git clone git@github.com:paastech-cloud/api.git
+
+cd api
+
+yarn
+
+# Edit the DATABASE_URL in the .env file accordingly to the postgres database based on the .env.example file
+
+npx prisma migrate dev
+
+cd ../git-controller/git-auth-layer
+
+docker compose exec -T postgres psql -U paastech -d paastech < data/entrypoint.sql
+```
+
+### Connect to the client and test the auth-layer
+
+```bash
+docker compose exec client-a bash
+
+cd repos/repoA
+
+echo "$RANDOM" > README.md
+
+git add .
+
+git commit -m "Add README"
+
+# The repository path is the same as the uuid in the entrypoint.sql
+git remote add origin git@server:210e364a-3a07-43ba-85b8-2e1c646bd39a.git
+
+git push origin master
+```
