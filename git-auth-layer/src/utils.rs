@@ -52,10 +52,10 @@ pub async fn check_user_repository_access(
         .await?;
 
     match sqlx::query_as::<_, (i32,)>(
-        "SELECT p.id FROM projects p WHERE p.user_id = $1 AND p.uuid = $2",
+        "SELECT p.id FROM projects p WHERE p.user_id = $1 AND p.uuid::text = $2",
     )
-    .bind(user_id)
-    .bind(repository_name)
+    .bind(&user_id)
+    .bind(&repository_name)
     .fetch_one(&mut connection)
     .await
     {
