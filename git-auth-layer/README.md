@@ -41,3 +41,33 @@ command="/path/to/gitstake-binary <user_id>" <ssh-key>
 Where user_id is an integer.
 
 For more information : [OpenSSH Documentation](https://man.openbsd.org/sshd.8#command=_command_)
+
+## How do I test it ?
+
+### Get in the directory
+
+```bash
+cd git-auth-layer
+```
+
+### Initialize ssh configuration files
+
+This file will initialize two ssh key pairs and an authorized_keys file containing thoses.
+
+```bash
+./scripts/init-dev-env.sh
+```
+
+### Start the dev environment
+
+This will start 4 containers :
+
+- A container with sshd awaiting connections on port 22 with 2 git repositories
+- Two client containers with each one of the ssh key pairs generated with the previous command
+- A postgres database
+
+```bash
+docker compose up -d
+```
+
+###

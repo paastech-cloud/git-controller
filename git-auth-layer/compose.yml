@@ -41,6 +41,8 @@ services:
         reservations:
           cpus: "0.25"
           memory: 125M
+      # volumes:
+      #   - ./data/entrypoint.sql:/docker-entrypoint-initdb.d/entrypoint.sql
 
 volumes:
   paastech:
