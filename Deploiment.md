@@ -3,7 +3,24 @@
 
 ## 1. Git authentication layer (git-auth-layer)
 
+All files for this folder will be copied over to the server on which this program will be run.
 
+This will be done through a github workflow that executes every time there will be a **push on main**.
+
+This action uses the appleboy/scp-action package to copy the github repository files to a specified server.
+
+To be able to use the repository as a source, we need to call the actions/checkout.
+
+In order to work, you need to define 3 secrets : 
+
+- **USERNAME**: the username of the server you want to connect to
+- **HOST**: address of the server you want to connect to
+- **PASSWORD**: the password of the user
+
+You can choose to replace PASSWORD by KEY and put an ssh key in its place.
+
+
+Change the ```target``` key to whatever folder you want your authentification repository to be saved in.
 
 
 ## 2. Git repository manager (git-repo-manager)

@@ -1,0 +1,26 @@
+name: Copy auth layer to remote server
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  copy:
+    name: copy
+    runs-on: self-hosted
+    steps:
+      # set git repository path as source to use later
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - run: echo "Copying files to server ..."
+      # copy files to server
+      - name: SCP files via ssh key
+        uses: appleboy/scp-action@master
+        with:
+          username: ${{ secrets.USERNAME }}
+          host: ${{ secrets.HOST }}
+          password: ${{ secrets.PASSWORD }}
+          port: 22
+          source: "git-auth-layer/*"
+          target: "./srv"
+      - run: echo "This job's status is ${{ job.status }}."
