@@ -468,7 +468,9 @@ dependencies = [
 name = "git-auth-layer"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "chrono",
+ "dotenvy",
  "log",
  "log4rs",
  "regex",
