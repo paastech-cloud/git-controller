@@ -1,0 +1,9 @@
+name: Pull Request
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  rust-checks:
+    uses: paastech-cloud/.github/.github/workflows/rust-ci.yml@v1

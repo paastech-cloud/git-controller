@@ -32,17 +32,17 @@ impl GitRepoManager for GitRepoManagerService {
         );
 
         // Check if the repository already exists, if it does return error otherwise continue
-        if let Ok(_) = fs::metadata(new_repo_path.clone()) {
+        if fs::metadata(new_repo_path.clone()).is_ok() {
             return Err(Status::already_exists(format!(
                 "repository {} already exists",
-                new_repo_path.clone(),
+                new_repo_path,
             )));
         }
 
         // Initialize empty git repository if it fails rollback and return error otherwise continue
         if Command::new("sh")
             .arg("-c")
-            .arg(format!("git init --bare {}", new_repo_path.clone()))
+            .arg(format!("git init --bare {}", new_repo_path))
             .output()
             .is_err()
         {
@@ -50,7 +50,7 @@ impl GitRepoManager for GitRepoManagerService {
         }
 
         let reply = RepositoryResponse {
-            message: format!("Created repository {}", request_data.repository_path).to_owned(),
+            message: format!("Created repository {}", request_data.repository_path),
         };
 
         Ok(Response::new(reply))
@@ -68,11 +68,11 @@ impl GitRepoManager for GitRepoManagerService {
             request_data.repository_path
         );
 
-        if let Err(_) = fs::metadata(full_repo_path.clone()) {
+        if fs::metadata(full_repo_path.clone()).is_err() {
             return Err(Status::not_found(""));
         }
 
-        if let Err(_) = fs::remove_dir_all(full_repo_path) {
+        if fs::remove_dir_all(full_repo_path).is_err() {
             return Err(Status::unknown("Failed removing repository"));
         }
 
