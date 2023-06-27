@@ -35,5 +35,9 @@ GitStake is a wrapper around the git-receive-pack command. It will check if the 
 To make sure the script is executed when the ssh connection is made, you need to prefix the public key in the authorized_keys file with the following command followed the a space and the user's public key:
 
 ```bash
-command="/path/to/gitstake-binary <username-id>"
+command="/path/to/gitstake-binary <user_id>" <ssh-key>
 ```
+
+Where user_id is an integer.
+
+For more information : [OpenSSH Documentation](https://man.openbsd.org/sshd.8#command=_command_)
