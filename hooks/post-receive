@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# Variables needed for the build
+# APP_NAME="my-app"
+# BUILD_DIR="/path/to/build/directory"
+# REGISTRY_URL="your-private-registry-url"
+# REGISTRY_USERNAME="your-registry-username"
+# REGISTRY_PASSWORD="your-registry-password"
+
+# Change to the build directory
+cd "$BUILD_DIR"
+
+# Build the image using buildpack
+echo "Building image..."
+pack build "$APP_NAME" --builder heroku/buildpacks
+
+# An example using docker :  Log in to the private registry
+echo "Logging in to the private registry..."
+echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USERNAME" --password-stdin "$REGISTRY_URL"
+
+# Tag the image with the registry URL
+TAG="$REGISTRY_URL/$APP_NAME"
+docker tag "$APP_NAME" "$TAG"
+
+# Push the image to the private registry
+echo "Pushing image to the private registry..."
+docker push "$TAG"
+
+# Clean up - remove the locally built image
+docker image rm "$APP_NAME"

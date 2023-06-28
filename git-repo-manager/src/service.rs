@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::Path;
 use std::process::Command;
 
 use paastech_proto::gitrepomanager::git_repo_manager_server::GitRepoManager;
@@ -8,6 +9,7 @@ use tonic::{Request, Response, Status};
 #[derive(Debug, Default)]
 pub struct GitRepoManagerServiceConfig {
     pub git_repository_base_path: String,
+    pub githook_base_path: String,
 }
 
 #[derive(Debug, Default)]
@@ -23,31 +25,47 @@ impl GitRepoManager for GitRepoManagerService {
         &self,
         request: Request<RepositoryRequest>,
     ) -> GitSproutResult<RepositoryResponse> {
+        let hook_full_path = format!("{}/post-receive", self.config.githook_base_path);
+
+        // Check if hook is present
+        if !Path::new(&hook_full_path).exists() {
+            return Err(Status::unknown("Hook is missing"));
+        }
+
         let request_data = request.into_inner();
 
-        let new_repo_path = format!(
+        let new_repo_full_path = format!(
             "{}/{}",
-            self.config.git_repository_base_path.clone(),
-            request_data.repository_path
+            self.config.git_repository_base_path, request_data.repository_path
         );
 
         // Check if the repository already exists, if it does return error otherwise continue
-        if fs::metadata(new_repo_path.clone()).is_ok() {
+        if fs::metadata(new_repo_full_path.clone()).is_ok() {
             return Err(Status::already_exists(format!(
                 "repository {} already exists",
-                new_repo_path,
+                new_repo_full_path,
             )));
         }
 
-        // Initialize empty git repository if it fails rollback and return error otherwise continue
+        // Initialize empty git repository
         if Command::new("sh")
             .arg("-c")
-            .arg(format!("git init --bare {}", new_repo_path))
+            .arg(format!("git init --bare {}", new_repo_full_path))
             .output()
             .is_err()
         {
             return Err(Status::unknown("Failed initializing repository"));
         }
+
+        // No need to check for errors since
+        Command::new("sh")
+            .arg("-c")
+            .arg(format!(
+                "ln -s {}/post-receive {}/hooks/post-receive",
+                self.config.githook_base_path, new_repo_full_path,
+            ))
+            .output()
+            .ok();
 
         let reply = RepositoryResponse {
             message: format!("Created repository {}", request_data.repository_path),
