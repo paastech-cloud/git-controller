@@ -29,7 +29,6 @@ impl GitRepoManager for GitRepoManagerService {
         let request_data = request.into_inner();
 
         // Create the full path to the repository
-
         let new_repo_path = format!(
             "{}/{}",
             self.config.git_repository_base_path.clone(),
@@ -62,7 +61,7 @@ impl GitRepoManager for GitRepoManagerService {
         let hook_path_exists = Path::new(&hook_path).exists();
 
         if hook_path_exists {
-            // Le chemin existe, vous pouvez lancer la commande
+            // If the hooks path exists create a symbolic link to the post-receive file
             if Command::new("sh")
                 .arg("-c")
                 .arg(format!(
@@ -75,7 +74,6 @@ impl GitRepoManager for GitRepoManagerService {
             {
                 return Err(Status::unknown("Failed to create symbolic links"));
             }
-            
         } else {
             // clean up the repository if it fails rollback and return error otherwise continue
             if Command::new("sh")
@@ -87,7 +85,9 @@ impl GitRepoManager for GitRepoManagerService {
                 return Err(Status::unknown("Failed cleaning up repository"));
             }
 
-            return Err(Status::unknown("Failed hooks path to post-receive file doesn't exist"));
+            return Err(Status::unknown(
+                "Failed hooks path to post-receive file doesn't exist",
+            ));
         }
 
         let reply = RepositoryResponse {
