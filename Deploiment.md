@@ -3,6 +3,8 @@
 
 ## 1. Git authentication layer (git-auth-layer)
 
+In order for this workflow to work, you will need to install a github runner on your machine : (Add a runner)[https://docs.github.com/en/enterprise-cloud@latest/actions/hosting-your-own-runners/managing-self-hosted-runners/adding-self-hosted-runners]
+
 All files for this folder will be copied over to the server on which this program will be run.
 
 This will be done through a github workflow that executes every time there will be a **push on main**.
@@ -15,7 +17,7 @@ In order to work, you need to define 3 secrets :
 
 - **USERNAME**: the username of the server you want to connect to
 - **HOST**: address of the server you want to connect to
-- **PASSWORD**: the password of the user
+- **SSH_KEY**: the ssh key to connect to the server
 
 You can choose to replace PASSWORD by KEY and put an ssh key in its place.
 

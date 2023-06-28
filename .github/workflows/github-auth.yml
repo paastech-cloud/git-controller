@@ -19,7 +19,7 @@ jobs:
         with:
           username: ${{ secrets.USERNAME }}
           host: ${{ secrets.HOST }}
-          password: ${{ secrets.PASSWORD }}
+          key: ${{ secrets.SSH_KEY }}
           port: 22
           source: "git-auth-layer/*"
           target: "./srv"
