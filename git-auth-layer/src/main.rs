@@ -19,11 +19,11 @@ use crate::{
 #[tokio::main]
 async fn main() {
     // get configuration
-    let _ = dotenvy::from_filename(&CONFIG_FILE_PATH).unwrap_or_else(|_| {
+    dotenvy::from_filename(CONFIG_FILE_PATH).unwrap_or_else(|_| {
         exit(1);
     });
 
-    let _ = configure_log4rs().unwrap_or_else(|_| {
+    configure_log4rs().unwrap_or_else(|_| {
         exit(1);
     });
 
