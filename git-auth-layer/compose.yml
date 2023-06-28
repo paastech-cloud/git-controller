@@ -3,13 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.server
-    networks:
-      gitstake:
-        aliases:
-          - "server-git"
-    volumes:
-      - ./target/x86_64-unknown-linux-musl/debug:/app
-      - ../fuse-authorized_keys/target/x86_64-unknown-linux-musl/debug:/fuse
 
   client-a:
     build:
@@ -17,8 +10,6 @@ services:
       dockerfile: Dockerfile.client
       args:
         CLIENT: a
-    networks:
-      - gitstake
     stdin_open: true
     tty: true
 
@@ -28,11 +19,31 @@ services:
       dockerfile: Dockerfile.client
       args:
         CLIENT: b
-    networks:
-      - gitstake
     stdin_open: true
     tty: true
 
-networks:
-  gitstake:
-    driver: bridge
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=paastech
+      - POSTGRES_PASSWORD=paastech
+      - POSTGRES_DB=paastech
+    ports:
+      - "5432:5432"
+    volumes:
+      - "paastech:/var/lib/postgresql/data"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 125M
+      # volumes:
+      #   - ./data/entrypoint.sql:/docker-entrypoint-initdb.d/entrypoint.sql
+
+volumes:
+  paastech:
+  git_volume:

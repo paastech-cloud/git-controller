@@ -27,4 +27,6 @@ COPY scripts/client-entrypoint.sh /usr/local/bin/entrypoint.sh
 
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+RUN mkdir -p /var/paastech/git-auth-layer/log
+
 ENTRYPOINT ["sh", "-c", "/usr/local/bin/entrypoint.sh"]

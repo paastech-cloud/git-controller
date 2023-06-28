@@ -1,60 +1,100 @@
-use std::process::{exit, Command};
+mod config;
+mod constants;
+mod utils;
 
-#[derive(Debug, PartialEq)]
-struct Acl {
-    user: String,
-    repo: String,
-}
+use config::configure_log4rs;
 
-fn main() {
-    let key = "SSH_ORIGINAL_COMMAND";
+use std::{
+    env,
+    process::{exit, Command},
+};
+use utils::{check_user_repository_access, get_user_id_from_args};
 
-    // Extract args there should be the command itself and a string to identify the user
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() != 2 {
-        eprintln!("[paastech] Unexpected error");
+use crate::{
+    constants::{CONFIG_FILE_PATH, GIT_REPOSITORIES_BASE_PATH_KEY, SSH_ORIGINAL_COMMAND_KEY},
+    utils::is_command_valid,
+};
+
+// TODO custom errors et tout ouais
+#[tokio::main]
+async fn main() {
+    // get configuration
+    dotenvy::from_filename(CONFIG_FILE_PATH).unwrap_or_else(|_| {
         exit(1);
-    }
-
-    // Acls for demo purpose
-    let acls: Vec<Acl> = vec![
-        Acl {
-            user: "userA".to_string(),
-            repo: "/srv/git/repoA.git".to_string(),
-        },
-        Acl {
-            user: "userB".to_string(),
-            repo: "/srv/git/repoB.git".to_string(),
-        },
-    ];
-
-    // Extract ssh_command
-    let raw_ssh_command = std::env::var(key).unwrap_or_else(|_| {
-        eprintln!("[paastech] Unexpected error");
-        std::process::exit(1);
     });
 
-    let ssh_command = Vec::from_iter(raw_ssh_command.split_whitespace());
+    configure_log4rs().unwrap_or_else(|_| {
+        exit(1);
+    });
 
-    // Checks if the command executed when connecting over ssh is git-receive-pack
-    if ssh_command.len() != 2 || ssh_command[0] != "git-receive-pack" {
-        eprintln!("[paastech] Bad request, you can only access this server via the git cli");
+    // Extract args there should be the command itself and a string to identify the user
+    let user_id = get_user_id_from_args().unwrap_or_else(|e| {
+        log::error!("{:?}", e);
+        exit(1);
+    });
+
+    // Extract ssh command from environment
+    let ssh_command = env::var(SSH_ORIGINAL_COMMAND_KEY).unwrap_or_else(|_| {
+        log::error!("Client did not use git cli correctly");
+        exit(1);
+    });
+
+    if !is_command_valid(&ssh_command) {
+        log::error!("Client executed an invalid command");
         exit(1);
     }
 
-    let acl = Acl {
-        user: args[1].to_owned(),
-        repo: ssh_command[1].to_owned().replace('\'', ""),
+    let git_repositories_base_path =
+        env::var(GIT_REPOSITORIES_BASE_PATH_KEY).unwrap_or_else(|_| {
+            log::error!("Missing {} configuration", GIT_REPOSITORIES_BASE_PATH_KEY);
+            exit(1);
+        });
+
+    let repository_name = ssh_command
+        .split(' ')
+        .last()
+        .unwrap_or_else(|| {
+            log::error!("Unexpected error when extracting repository name from command");
+            exit(1);
+        })
+        .replace('\'', "")
+        .replace(".git", "")
+        .as_str()
+        .to_owned();
+
+    let repository_path = format!("{}/{}.git", git_repositories_base_path, repository_name);
+
+    match check_user_repository_access(user_id, &repository_name).await {
+        Ok(_) => {
+            // Execute git-receive-pack
+            Command::new("git-receive-pack")
+                .arg(&repository_path)
+                .status()
+                .unwrap_or_else(|_| {
+                    log::error!(
+                        "Error when git-receive-pack on repository {}",
+                        repository_path
+                    );
+                    exit(1);
+                });
+
+            log::info!(
+                "Client {} successfully push to repository {}",
+                user_id,
+                repository_name
+            );
+        }
+        Err(sqlx::Error::RowNotFound) => {
+            log::info!(
+                "Client {} did not have access to repository {}",
+                user_id,
+                repository_name
+            );
+            exit(1);
+        }
+        Err(e) => {
+            log::error!("Unexpected error when querying database {:?}", e);
+            exit(1);
+        }
     };
-
-    if !acls.contains(&acl) {
-        eprintln!("[paastech] Forbidden");
-        exit(1);
-    }
-
-    // Execute git-receive-pack
-    Command::new("git-receive-pack")
-        .arg(&acl.repo)
-        .status()
-        .ok();
 }
