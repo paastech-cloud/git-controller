@@ -19,7 +19,7 @@ pub fn configure_log4rs() -> Result<()> {
     let config = Config::builder()
         .appender(Appender::builder().build("logfile", Box::new(logfile)))
         .build(Root::builder().appender("logfile").build(LevelFilter::Info))
-        .with_context(|| format!("Failed to initialize logfile config"))?;
+        .with_context(|| "Failed to initialize logfile config")?;
 
     let _ = log4rs::init_config(config);
 
