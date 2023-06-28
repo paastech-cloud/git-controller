@@ -31,8 +31,7 @@ impl GitRepoManager for GitRepoManagerService {
         // Create the full path to the repository
         let new_repo_path = format!(
             "{}/{}",
-            self.config.git_repository_base_path.clone(),
-            request_data.repository_path
+            self.config.git_repository_base_path, request_data.repository_path
         );
 
         // Check if the repository already exists, if it does return error otherwise continue
@@ -53,10 +52,7 @@ impl GitRepoManager for GitRepoManagerService {
             return Err(Status::unknown("Failed initializing repository"));
         }
 
-        let hook_path = format!(
-            "{}/hooks/post-receive",
-            self.config.githook_base_path.clone()
-        );
+        let hook_path = format!("{}/hooks/post-receive", self.config.githook_base_path);
 
         let hook_path_exists = Path::new(&hook_path).exists();
 
@@ -66,8 +62,7 @@ impl GitRepoManager for GitRepoManagerService {
                 .arg("-c")
                 .arg(format!(
                     "ln -s {}/hooks/post-receive {}/hooks/post-receive",
-                    self.config.githook_base_path.clone(),
-                    new_repo_path.clone(),
+                    self.config.githook_base_path, new_repo_path,
                 ))
                 .output()
                 .is_err()
@@ -78,7 +73,7 @@ impl GitRepoManager for GitRepoManagerService {
             // clean up the repository if it fails rollback and return error otherwise continue
             if Command::new("sh")
                 .arg("-c")
-                .arg(format!("rm -rf {}", new_repo_path.clone()))
+                .arg(format!("rm -rf {}", new_repo_path))
                 .output()
                 .is_err()
             {
