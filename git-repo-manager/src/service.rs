@@ -25,6 +25,13 @@ impl GitRepoManager for GitRepoManagerService {
         &self,
         request: Request<RepositoryRequest>,
     ) -> GitSproutResult<RepositoryResponse> {
+        let hook_full_path = format!("{}/post-receive", self.config.githook_base_path);
+
+        // Check if hook is present
+        if !Path::new(&hook_full_path).exists() {
+            return Err(Status::unknown("Hook is missing"));
+        }
+
         let request_data = request.into_inner();
 
         let new_repo_full_path = format!(
@@ -50,37 +57,15 @@ impl GitRepoManager for GitRepoManagerService {
             return Err(Status::unknown("Failed initializing repository"));
         }
 
-        let hook_full_path = format!("{}/hooks/post-receive", self.config.githook_base_path);
-
-        // Check if hook is present
-        if Path::new(&hook_full_path).exists() {
-            // Create a symbolic link
-            if Command::new("sh")
-                .arg("-c")
-                .arg(format!(
-                    "ln -s {}/hooks/post-receive {}/hooks/post-receive",
-                    self.config.githook_base_path, new_repo_full_path,
-                ))
-                .output()
-                .is_err()
-            {
-                return Err(Status::unknown("Failed to create symbolic links"));
-            }
-        } else {
-            // Clean up if it fails
-            if Command::new("sh")
-                .arg("-c")
-                .arg(format!("rm -rf {}", new_repo_full_path))
-                .output()
-                .is_err()
-            {
-                return Err(Status::unknown("Failed cleaning up repository"));
-            }
-
-            return Err(Status::unknown(
-                "Failed hooks path to post-receive file doesn't exist",
-            ));
-        }
+        // No need to check for errors since
+        Command::new("sh")
+            .arg("-c")
+            .arg(format!(
+                "ln -s {}/post-receive {}/hooks/post-receive",
+                self.config.githook_base_path, new_repo_full_path,
+            ))
+            .output()
+            .ok();
 
         let reply = RepositoryResponse {
             message: format!("Created repository {}", request_data.repository_path),
