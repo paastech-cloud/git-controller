@@ -29,6 +29,9 @@ RUN adduser --disabled-password git && \
 # add authorized_keys file
 COPY --chown=git:git ./scripts/output/server/authorized_keys /home/git/.ssh/authorized_keys
 
+# add config file
+COPY --chown=git:git ./config/config.env /etc/paastech/git-auth-layer/config.env
+
 # add adequare rights to authorized_keys file see https://man.openbsd.org/sshd.8#FILES
 RUN chmod 600 /home/git/.ssh/authorized_keys
 
@@ -40,14 +43,20 @@ RUN mkdir -p /srv && \
 
 RUN mkdir -p /var/run/sshd
 
-# initialize log directory and config file
-COPY --chown=git:git ./config/config.env /etc/paastech/git-auth-layer/config.env
-
 RUN mkdir -p /var/log/paastech/git-auth-layer && chown -R git:git /var/log/paastech/git-auth-layer
 
 # copy built binary
 COPY --from=build --chown=git:git /app/target/release/git-auth-layer /usr/bin
 
-EXPOSE 22
+# tedious steps to make git accessible for the git user
+RUN mkdir /opt/ssh && mv /etc/ssh/ssh*key /opt/ssh
 
-CMD ["/usr/sbin/sshd", "-D", "-E", "/proc/1/fd/1", "-o", "LogLevel=VERBOSE"]
+RUN chown -R git:git /opt/ssh
+
+COPY --chown=git:git config/sshd_config /opt/ssh
+
+USER git
+
+EXPOSE 2022
+
+CMD ["/usr/sbin/sshd", "-D", "-E", "/proc/1/fd/1", "-o", "LogLevel=VERBOSE", "-f", "/opt/ssh/sshd_config"]
