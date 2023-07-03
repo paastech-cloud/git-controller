@@ -50,4 +50,4 @@ COPY --from=build --chown=git:git /app/target/release/git-auth-layer /usr/bin
 
 EXPOSE 22
 
-CMD ["/usr/sbin/sshd", "-D"]
+CMD ["/usr/sbin/sshd", "-D", "-E", "/proc/1/fd/1", "-o", "LogLevel=VERBOSE"]
