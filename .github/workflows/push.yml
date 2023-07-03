@@ -1,0 +1,13 @@
+name: Push Workflow
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-auth-layer-image:
+    uses: paastech-cloud/git-controller/.github/workflows/docker.yml@make/docker-actions
+    with:
+      dockerfile: git-auth-layer/Dockerfile.server
+      context: git-auth-layer
+      image_name: git-controller/git-auth-layer
