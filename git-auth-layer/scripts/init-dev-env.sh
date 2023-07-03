@@ -1,8 +1,14 @@
 #!/bin/bash
 
-rm -rf scripts/output/client* scripts/server
+rm -rf scripts/output/client* scripts/server logs etc
 
 mkdir -p scripts/output/client-a scripts/output/client-b scripts/output/server
+
+mkdir -p logs
+
+mkdir -p etc/ssh
+
+ssh-keygen -A -f $(pwd)
 
 ssh-keygen -t ed25519 -C "userA@user.fr" -f scripts/output/client-a/id_ed25519 -q -N ""
 
