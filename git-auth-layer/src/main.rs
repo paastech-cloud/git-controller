@@ -34,10 +34,12 @@ async fn main() {
     });
 
     // Extract ssh command from environment
-    let ssh_command = env::var(SSH_ORIGINAL_COMMAND_KEY).unwrap_or_else(|_| {
-        log::error!("Client did not use git cli correctly");
-        exit(1);
-    });
+    let ssh_command = env::var(SSH_ORIGINAL_COMMAND_KEY)
+        .unwrap_or_else(|_| {
+            log::error!("Client did not use git cli correctly");
+            exit(1);
+        })
+        .replace('/', "");
 
     if !is_command_valid(&ssh_command) {
         log::error!("Client executed an invalid command");
