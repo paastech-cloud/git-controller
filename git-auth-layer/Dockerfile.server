@@ -48,6 +48,8 @@ RUN mkdir -p /var/log/paastech/git-auth-layer && chown -R git:git /var/log/paast
 # copy built binary
 COPY --from=build --chown=git:git /app/target/release/git-auth-layer /usr/bin
 
+USER git
+
 EXPOSE 22
 
 CMD ["/usr/sbin/sshd", "-D"]
