@@ -3,6 +3,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.server
+    volumes:
+      - "./scripts/output/server:/home/git/.ssh"
+      - "./config:/etc/paastech/git-auth-layer"
+      - "./logs:/var/log/paastech/git-auth-layer"
 
   client-a:
     build:
