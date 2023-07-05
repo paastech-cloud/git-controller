@@ -52,7 +52,7 @@ docker compose up --build
 
 ## Usage
 
-To enter the client container and access the command-line interface, use the following command:
+To test the dynamic filesystem (fuse), issue the following command:
 
 ```bash
 docker exec git-controller-fuse-1 cat /home/newuser/.ssh/authorized_keys
