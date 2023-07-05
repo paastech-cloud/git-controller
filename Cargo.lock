@@ -67,6 +67,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bddcadddf5e9015d310179a59bb28c4d4b9920ad0f11e8e14dbadf654890c9a6"
 
 [[package]]
+name = "async-fuse"
+version = "0.1.0-dev"
+source = "git+https://github.com/jmpq/async-fuse-rs#638f5b9846656b50c9ee9aa5b988b7d67d43e05d"
+dependencies = [
+ "async-trait",
+ "fuse-abi",
+ "fuse-sys",
+ "libc",
+ "log",
+ "tokio",
+]
+
+[[package]]
 name = "async-trait"
 version = "0.1.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -389,6 +402,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a62bc1cf6f830c2ec14a513a9fb124d0a213a629668a4186f329db21fe045652"
 dependencies = [
  "percent-encoding",
+]
+
+[[package]]
+name = "fuse-abi"
+version = "0.1.0-dev"
+source = "git+https://github.com/jmpq/async-fuse-rs#638f5b9846656b50c9ee9aa5b988b7d67d43e05d"
+
+[[package]]
+name = "fuse-sys"
+version = "0.1.0-dev"
+source = "git+https://github.com/jmpq/async-fuse-rs#638f5b9846656b50c9ee9aa5b988b7d67d43e05d"
+dependencies = [
+ "pkg-config",
 ]
 
 [[package]]
@@ -1035,6 +1061,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
+name = "pkg-config"
+version = "0.3.27"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26072860ba924cbfa98ea39c8c19b4dd6a4a25423dbdf219c1eca91aa0cf6964"
+
+[[package]]
 name = "ppv-lite86"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1352,6 +1384,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "signal-hook-registry"
+version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8229b473baa5980ac72ef434c4415e70c4b5e71b423043adb4ba059f89c99a1"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "slab"
 version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1489,6 +1530,15 @@ dependencies = [
 [[package]]
 name = "ssh-keys-fuse"
 version = "0.1.0"
+dependencies = [
+ "async-fuse",
+ "async-trait",
+ "dotenv",
+ "dotenvy",
+ "libc",
+ "sqlx",
+ "tokio",
+]
 
 [[package]]
 name = "stringprep"
@@ -1616,7 +1666,9 @@ dependencies = [
  "libc",
  "mio",
  "num_cpus",
+ "parking_lot 0.12.1",
  "pin-project-lite",
+ "signal-hook-registry",
  "socket2",
  "tokio-macros",
  "windows-sys",
