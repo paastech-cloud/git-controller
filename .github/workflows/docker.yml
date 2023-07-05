@@ -23,7 +23,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            ghcr.io/${{ inputs.image_name }}
+            ghcr.io/paastech-cloud/${{ inputs.image_name }}
           tags: |
             type=sha
             latest
