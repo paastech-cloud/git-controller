@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+    - POSTGRES_USER=paastech
+    - POSTGRES_PASSWORD=paastech
+    - POSTGRES_DB=paastech
+    ports:
+    - "5432"
+    volumes:
+    - "data_db:/var/lib/postgresql/data"
+    - "./ssh-keys-fuse/database:/docker-entrypoint-initdb.d"
+
+  fuse:
+    build:
+      context: ssh-keys-fuse
+      target: runner
+    restart: always
+    env_file:
+    - ssh-keys-fuse/.env
+    cap_add:
+    - SYS_ADMIN
+    devices:
+    - /dev/fuse
+    security_opt:
+    - apparmor:unconfined
+    depends_on:
+    - postgres
+
+volumes:
+  data_db:
