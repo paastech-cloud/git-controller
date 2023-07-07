@@ -2,6 +2,9 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+use log::error;
+use log::info;
+
 use paastech_proto::gitrepomanager::git_repo_manager_server::GitRepoManager;
 use paastech_proto::gitrepomanager::{RepositoryRequest, RepositoryResponse};
 use tonic::{Request, Response, Status};
@@ -29,7 +32,12 @@ impl GitRepoManager for GitRepoManagerService {
 
         // Check if hook is present
         if !Path::new(&hook_full_path).exists() {
-            return Err(Status::unknown("Hook is missing"));
+            // Log
+            error!("create_repository: hook is missing at {}", &hook_full_path);
+            return Err(Status::unknown(format!(
+                "Hook is missing at  {}",
+                hook_full_path,
+            )));
         }
 
         let request_data = request.into_inner();
@@ -39,8 +47,16 @@ impl GitRepoManager for GitRepoManagerService {
             self.config.git_repository_base_path, request_data.repository_path
         );
 
+        // Log
+        info!("Creating new repository : {}", new_repo_full_path);
+
         // Check if the repository already exists, if it does return error otherwise continue
-        if fs::metadata(new_repo_full_path.clone()).is_ok() {
+        if fs::metadata(&new_repo_full_path).is_ok() {
+            // Log
+            error!(
+                "create_repository: repository already exists at {}",
+                &new_repo_full_path
+            );
             return Err(Status::already_exists(format!(
                 "repository {} already exists",
                 new_repo_full_path,
@@ -54,6 +70,12 @@ impl GitRepoManager for GitRepoManagerService {
             .output()
             .is_err()
         {
+            // Log
+            error!(
+                "create_repository: something went wrong when initiazing repository at {}",
+                &new_repo_full_path
+            );
+
             return Err(Status::unknown("Failed initializing repository"));
         }
 
@@ -82,15 +104,27 @@ impl GitRepoManager for GitRepoManagerService {
 
         let full_repo_path = format!(
             "{}/{}",
-            self.config.git_repository_base_path.clone(),
-            request_data.repository_path
+            &self.config.git_repository_base_path, request_data.repository_path
         );
 
-        if fs::metadata(full_repo_path.clone()).is_err() {
+        // Log
+        info!("Deleting Repository : {}", full_repo_path);
+
+        if fs::metadata(&full_repo_path).is_err() {
+            // Log
+            error!(
+                "delete_repository: not found repository at {}",
+                &full_repo_path
+            );
             return Err(Status::not_found(""));
         }
 
-        if fs::remove_dir_all(full_repo_path).is_err() {
+        if fs::remove_dir_all(&full_repo_path).is_err() {
+            // Log
+            error!(
+                "delete_repository: something went wrong when removing repository at {}",
+                &full_repo_path
+            );
             return Err(Status::unknown("Failed removing repository"));
         }
 

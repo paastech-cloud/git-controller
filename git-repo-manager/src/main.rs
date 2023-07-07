@@ -1,3 +1,5 @@
+use log::info;
+
 mod constants;
 mod service;
 
@@ -22,6 +24,8 @@ fn load_env_into_config() -> Result<GitRepoManagerServiceConfig, VarError> {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
+    pretty_env_logger::init();
+
     let addr = format!(
         "[::1]:{}",
         std::env::var(SERVER_PORT_KEY)
@@ -34,6 +38,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let gitsprout_service = GitRepoManagerService {
         config: gitsprout_config,
     };
+
+    info!("Succesfully started");
 
     Server::builder()
         .add_service(GitRepoManagerServer::new(gitsprout_service))
