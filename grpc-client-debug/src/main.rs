@@ -3,7 +3,6 @@ use paastech_proto::gitrepomanager::RepositoryRequest;
 use std::io;
 
 #[tokio::main]
-
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a connection to the gRPC server
     let mut client = GitRepoManagerClient::connect("http://[::1]:50051").await?;

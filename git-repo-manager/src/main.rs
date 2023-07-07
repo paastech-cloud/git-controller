@@ -39,7 +39,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         config: gitsprout_config,
     };
 
-    info!("Succesfully started");
+    info!(
+        "server started succesfully on port : {}",
+        std::env::var(SERVER_PORT_KEY)
+            .unwrap_or_else(|error| panic!("Err {}: env var {}", error, SERVER_PORT_KEY))
+    );
 
     Server::builder()
         .add_service(GitRepoManagerServer::new(gitsprout_service))
