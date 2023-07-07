@@ -1,0 +1,9 @@
+{
+    "name": "RepoName",
+    "subrepos": [
+        {
+            "name": "SUB_REPO_NAME",
+            "path": "SUB_REPO_PATH"
+        }
+    ]
+}

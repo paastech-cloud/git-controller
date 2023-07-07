@@ -1,5 +1,9 @@
 use std::fs;
-use std::env;
+
+use dotenv::dotenv;
+
+pub mod database;
+pub mod docker;
 
 fn file_match(filename: String) -> bool {
     let file_matches: Vec<String> = vec![
@@ -13,7 +17,7 @@ fn file_match(filename: String) -> bool {
     return file_matches.contains(&filename.clone());
 }
 
-fn check_dir(dir_path: String) {
+pub fn check_dir(dir_path: String) {
     let dir_content = fs::read_dir(dir_path.clone()).unwrap();
     for file in dir_content {
         let file_obj = file.unwrap();
@@ -33,13 +37,13 @@ fn check_dir(dir_path: String) {
 }
 
 fn main() {
-    let arguments: Vec<String> = env::args().collect();
-    if arguments.len() <= 1 {
-        println!("Usage: {} <path>", arguments[0].clone());
-        return;
-    }
+    dotenv().ok();
+    //database::connect();
 
-    let path = arguments[1].clone();
-    check_dir(path);
+    docker::build_project(
+        "backendapp".to_string(),
+        "/home/wh0w/Documents/DO3/CONTAINERS/vfo-kube/back".to_string(),
+        "Dockerfile".to_string()
+    );
 
 }
