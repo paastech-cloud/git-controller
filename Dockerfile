@@ -24,4 +24,4 @@ COPY --from=build --chown=proto:proto /app/target/release/server /app
 
 USER proto
 
-CMD [ "./repo-manager" ]
+CMD [ "./server" ]
