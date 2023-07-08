@@ -3,7 +3,6 @@ use std::path::Path;
 use std::process::Command;
 
 use log::debug;
-use log::info;
 use log::trace;
 
 use paastech_proto::gitrepomanager::git_repo_manager_server::GitRepoManager;
