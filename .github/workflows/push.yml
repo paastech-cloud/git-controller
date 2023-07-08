@@ -12,7 +12,11 @@ on:
 
 jobs:
   rustci:
-    uses: paastech-cloud/.github/.github/workflows/rust-ci.yml@v1
+    uses: paastech-cloud/.github/.github/workflows/rust-ci.yml@make-rust-ci
+
+  build-docs:
+    needs: rustci
+    uses: paastech-cloud/.github/.github/workflows/rust-doc.yml@make-rust-ci
 
   docker-build-push:
     needs: rustci
