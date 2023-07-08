@@ -2,7 +2,9 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+use log::debug;
 use log::info;
+use log::trace;
 
 use paastech_proto::gitrepomanager::git_repo_manager_server::GitRepoManager;
 use paastech_proto::gitrepomanager::{RepositoryRequest, RepositoryResponse};
@@ -44,10 +46,14 @@ impl GitRepoManager for GitRepoManagerService {
             self.config.git_repository_base_path, request_data.repository_path
         );
 
-        info!("creating new repository : {}", new_repo_full_path);
+        trace!("creating new repository : {}", new_repo_full_path);
 
         // Check if the repository already exists, if it does return error otherwise continue
         if fs::metadata(&new_repo_full_path).is_ok() {
+            debug!(
+                "error while creating repository : already exist at {}",
+                new_repo_full_path
+            );
             return Err(Status::already_exists(format!(
                 "repository {} already exists",
                 new_repo_full_path,
@@ -61,6 +67,10 @@ impl GitRepoManager for GitRepoManagerService {
             .output()
             .is_err()
         {
+            debug!(
+                "error while creating repository : failed initilizing at {}",
+                new_repo_full_path
+            );
             return Err(Status::unknown("Failed initializing repository"));
         }
 
@@ -92,13 +102,21 @@ impl GitRepoManager for GitRepoManagerService {
             &self.config.git_repository_base_path, request_data.repository_path
         );
 
-        info!("deleting repository : {}", full_repo_path);
+        trace!("deleting repository : {}", full_repo_path);
 
         if fs::metadata(&full_repo_path).is_err() {
+            debug!(
+                "error while deleting repository :  not found at {}",
+                full_repo_path
+            );
             return Err(Status::not_found(""));
         }
 
         if fs::remove_dir_all(&full_repo_path).is_err() {
+            debug!(
+                "error while deleting repository :  failed when removing repository {}",
+                full_repo_path
+            );
             return Err(Status::unknown("Failed removing repository"));
         }
 
