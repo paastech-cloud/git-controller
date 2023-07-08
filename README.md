@@ -2,6 +2,7 @@
 
 ## Table of Contents
 
+- [Git repo manager](#git-repo-manager)
   - [Table of Contents](#table-of-contents)
   - [Description](#description)
   - [Requirements](#requirements)
@@ -40,11 +41,14 @@ Before running the server, make sure you have the following installed:
 To run the server, run the following command:
 
 ```bash
-cargo run --bin repo-manager
+cargo run
+
+# or
+cargo run --bin server
 ```
 
 To run the client-debug, run the following command:
 
 ```bash
-cargo run --bin client-debug
+cargo run --bin client
 ```

@@ -2,6 +2,7 @@
 name = "git-repo-manager"
 version = "0.1.0"
 edition = "2021"
+default-run = "server"
 
 [dependencies]
 tonic = "0.9"
@@ -13,9 +14,9 @@ pretty_env_logger = "0.3.1"
 log = "0.4"
 
 [[bin]]
-name= "repo-manager"
+name= "server"
 path= "src/repo-manager/main.rs"
 
 [[bin]]
-name= "client-debug"
+name= "client"
 path= "src/client-debug/main.rs"
