@@ -16,8 +16,6 @@ jobs:
   docker-build-push:
     needs: rustci
     uses: paastech-cloud/.github/.github/workflows/docker.yml@main
-    permissions:
-      packages: write
     with:
       dockerfile: Dockerfile
       image_name: ${{ github.repository }}
