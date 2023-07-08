@@ -11,7 +11,7 @@ RUN cargo fetch
 
 COPY src src
 
-RUN cargo build --release
+RUN cargo build --release --bin server
 
 FROM debian:bookworm-slim
 
