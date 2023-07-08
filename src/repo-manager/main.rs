@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     pretty_env_logger::init();
 
     let addr = format!(
-        "[::1]:{}",
+        "0.0.0.0:{}",
         std::env::var(SERVER_PORT_KEY)
             .unwrap_or_else(|error| panic!("Err {}: env var {}", error, SERVER_PORT_KEY))
     )
