@@ -2,7 +2,7 @@ name: Push
 
 on:
   push:
-    branches: [ make/build-workflow ]
+    branches: [ main ]
     paths:
       - 'src/**'
       - Cargo.toml
