@@ -1,0 +1,24 @@
+name: Push
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - Cargo.toml
+      - Cargo.lock
+  workflow_dispatch:
+
+jobs:
+  rustci:
+    uses: paastech-cloud/.github/.github/workflows/rust-ci.yml@v1
+
+  docker-build-push:
+    needs: rustci
+    uses: paastech-cloud/.github/.github/workflows/docker.yml@main
+    permissions:
+      packages: write
+    with:
+      dockerfile: Dockerfile
+      image_name: ${{ github.repository }}
+      context: .
