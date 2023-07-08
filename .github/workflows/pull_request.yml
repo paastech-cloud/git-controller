@@ -6,4 +6,4 @@ on:
 
 jobs:
   rust-checks:
-    uses: paastech-cloud/.github/.github/workflows/rust-ci.yml@v1
+    uses: paastech-cloud/.github/.github/workflows/rust-ci.yml@v2.1

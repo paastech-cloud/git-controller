@@ -12,15 +12,15 @@ on:
 
 jobs:
   rustci:
-    uses: paastech-cloud/.github/.github/workflows/rust-ci.yml@v2
+    uses: paastech-cloud/.github/.github/workflows/rust-ci.yml@v2.1
 
   build-docs:
     needs: rustci
-    uses: paastech-cloud/.github/.github/workflows/rust-doc.yml@v2
+    uses: paastech-cloud/.github/.github/workflows/rust-doc.yml@v2.1
 
   docker-build-push:
     needs: rustci
-    uses: paastech-cloud/.github/.github/workflows/docker.yml@v2
+    uses: paastech-cloud/.github/.github/workflows/docker.yml@v2.1
     with:
       dockerfile: Dockerfile
       image_name: ${{ github.repository }}
