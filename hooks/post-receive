@@ -1,30 +1,129 @@
-#!/bin/sh
+#!/bin/bash
 
-# Variables needed for the build
-# APP_NAME="my-app"
-# BUILD_DIR="/path/to/build/directory"
-# REGISTRY_URL="your-private-registry-url"
-# REGISTRY_USERNAME="your-registry-username"
-# REGISTRY_PASSWORD="your-registry-password"
+set -Eeuo pipefail
 
-# Change to the build directory
-cd "$BUILD_DIR"
+# Requires yq (https://stedolan.github.io/yq/)
+# test if yq is installed
+if ! [ -x "$(command -v yq)" ]; then
+    >&2 echo -e "${RED}ERROR:${NC} yq is not installed, contact paastech support"
+    exit 1
+fi
 
-# Build the image using buildpack
-echo "Building image..."
-pack build "$APP_NAME" --builder heroku/buildpacks
+# This script is a git hook that will build the app using pack
+# It will first checkout the code to /tmp/app-timestamp
+# It will then run the paastech deploy command to deploy the app
+# It will read the .paastech/buildpacks.json file to get the builder, buildpack, path, and env variables
+# It will then run the pack build command and build the app
+# It will then tag the image as latest
 
-# An example using docker :  Log in to the private registry
-echo "Logging in to the private registry..."
-echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USERNAME" --password-stdin "$REGISTRY_URL"
+# This script is meant to be run on the server, not locally
 
-# Tag the image with the registry URL
-TAG="$REGISTRY_URL/$APP_NAME"
-docker tag "$APP_NAME" "$TAG"
+RED='\033[1;31m' # Red
+NC='\033[0m' # No Color
+BLUE='\033[1;34m' # Blue
+GREEN='\033[1;32m' # Green
 
-# Push the image to the private registry
-echo "Pushing image to the private registry..."
-docker push "$TAG"
+# checks if a yq variable is set
+function check_yq_var {
+    if [ "$1" = null ]; then
+        >&2 echo -e "${RED}ERROR:${NC} $2 is not set, edit .paastech/buildpacks.json to add it"
+        exit 1
+    fi
+}
 
-# Clean up - remove the locally built image
-docker image rm "$APP_NAME"
+function IsSet() {
+  [[ ${!1-x} == x ]] && return 1 || return 0
+}
+
+if ! IsSet "PWD"; then
+    >&2 echo -e "${RED}ERROR:${NC} PWD is not set, contact paastech support"
+    exit 1
+fi
+
+branch="main"
+project_name=$(basename "$PWD")
+now_nano=$(date +%s%N)
+
+target_path=/tmp/"$project_name"-"$now_nano"-$RANDOM
+
+mkdir -p "$target_path"
+
+# checkout the code to /tmp/app-timestamp
+git --work-tree="$target_path" --git-dir=. checkout -f "$branch"
+
+echo -e "${BLUE}===> READING CONFIGURATION FILE${NC}"
+
+config_path="$target_path"
+
+if [ -f "$config_path/paastech.yaml" ]; then
+    config_path+="/paastech.yaml"
+elif [ -f "$config_path/paastech.yml" ]; then
+    config_path+="/paastech.yml"
+else
+    >&2 echo -e "${RED}ERROR:${NC} paastech.yaml or paastech.yml not found in $config_path"
+    exit 1
+fi
+
+config=$(cat "$config_path")
+
+# path to the app to build
+path=$(echo "$config" | yq -r '.buildpacks.path')
+
+# builder url or name
+builder=$(echo "$config" | yq -r '.buildpacks.builder')
+
+# buildpack url or name
+buildpack=$(echo "$config" | yq -r '.buildpacks.buildpack')
+
+# array of strings to pass to pack build --env
+# their format is "key=value"
+env=$(echo "$config" | yq -r '.buildpacks.env[]')
+
+# make sure all the variables are set
+check_yq_var "$path" "path"
+check_yq_var "$builder" "builder"
+check_yq_var "$buildpack" "buildpack"
+check_yq_var "$env" "env"
+
+echo -e "${GREEN}Sucessfully read your configuration file${NC}"
+echo -e "${BLUE}  Path=${NC}$path"
+echo -e "${BLUE}  Builder=${NC}$builder"
+echo -e "${BLUE}  Buildpack=${NC}$buildpack"
+
+# print the env variables
+echo -e "${BLUE}  Env=${NC}"
+for e in $env; do
+    echo -e "    $e"
+done
+
+# check if the path exists and is a directory
+if ! [ -d "$target_path/$path" ]; then
+    >&2 echo -e "${RED}ERROR:${NC} $path is not a directory"
+    exit 1
+fi
+
+# build the pack command
+pack_cmd="pack build "$project_name:latest" --builder $builder --path $target_path/$path"
+
+if [ "$buildpack" != "" ]; then
+    pack_cmd+=" --buildpack $buildpack"
+fi
+
+# add the env variables
+for e in $env; do
+    pack_cmd+=" --env $e"
+done
+
+echo -e "${BLUE}===> BUILDING APP ${NC}"
+
+echo -e "Running command: ${BLUE}$pack_cmd${NC}"
+
+if ! eval "$pack_cmd"; then
+    >&2 echo -e "${RED}ERROR:${NC} pack build failed"
+    exit 1
+fi
+
+echo -e "Build successful, you can now run: ${BLUE}paastech deploy${NC}"
+
+# cleanup
+rm -rf "$target_path"
