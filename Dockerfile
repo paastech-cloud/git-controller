@@ -17,11 +17,6 @@ FROM debian:bookworm-slim
 
 WORKDIR /app
 
-# add proto user
-RUN useradd proto
-
-COPY --from=build --chown=proto:proto /app/target/release/server /app
-
-USER proto
+COPY --from=build /app/target/release/server /app
 
 CMD [ "./server" ]
