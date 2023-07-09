@@ -2,6 +2,13 @@
 
 set -Eeuo pipefail
 
+# Requires yq (https://stedolan.github.io/yq/)
+# test if yq is installed
+if ! [ -x "$(command -v yq)" ]; then
+    >&2 echo -e "${RED}ERROR:${NC} yq is not installed, contact paastech support"
+    exit 1
+fi
+
 # This script is a git hook that will build the app using pack
 # It will first checkout the code to /tmp/app-timestamp
 # It will then run the paastech deploy command to deploy the app
@@ -16,8 +23,8 @@ NC='\033[0m' # No Color
 BLUE='\033[1;34m' # Blue
 GREEN='\033[1;32m' # Green
 
-# checks if a jq variable is set
-function check_jq_var {
+# checks if a yq variable is set
+function check_yq_var {
     if [ "$1" = null ]; then
         >&2 echo -e "${RED}ERROR:${NC} $2 is not set, edit .paastech/buildpacks.json to add it"
         exit 1
@@ -44,37 +51,39 @@ mkdir -p "$target_path"
 # checkout the code to /tmp/app-timestamp
 git --work-tree="$target_path" --git-dir=. checkout -f "$branch"
 
-# Requires jq (https://stedolan.github.io/jq/)
-# test if jq is installed
-if ! [ -x "$(command -v jq)" ]; then
-    >&2 echo -e "${RED}ERROR:${NC} jq is not installed, contact paastech support"
-    exit 1
-fi
-
 echo -e "${BLUE}===> READING CONFIGURATION FILE${NC}"
 
-config_path="$target_path"/.paastech/buildpacks.json
+config_path="$target_path"
+
+if [ -f "$config_path/paastech.yaml" ]; then
+    config_path+="/paastech.yaml"
+elif [ -f "$config_path/paastech.yml" ]; then
+    config_path+="/paastech.yml"
+else
+    >&2 echo -e "${RED}ERROR:${NC} paastech.yaml or paastech.yml not found in $config_path"
+    exit 1
+fi
 
 config=$(cat "$config_path")
 
 # path to the app to build
-path=$(echo "$config" | jq -r '.path')
+path=$(echo "$config" | yq -r '.buildpacks.path')
 
 # builder url or name
-builder=$(echo "$config" | jq -r '.builder')
+builder=$(echo "$config" | yq -r '.buildpacks.builder')
 
 # buildpack url or name
-buildpack=$(echo "$config" | jq -r '.buildpack')
+buildpack=$(echo "$config" | yq -r '.buildpacks.buildpack')
 
 # array of strings to pass to pack build --env
 # their format is "key=value"
-env=$(echo "$config" | jq -r '.env[]')
+env=$(echo "$config" | yq -r '.buildpacks.env[]')
 
 # make sure all the variables are set
-check_jq_var "$path" "path"
-check_jq_var "$builder" "builder"
-check_jq_var "$buildpack" "buildpack"
-check_jq_var "$env" "env"
+check_yq_var "$path" "path"
+check_yq_var "$builder" "builder"
+check_yq_var "$buildpack" "buildpack"
+check_yq_var "$env" "env"
 
 echo -e "${GREEN}Sucessfully read your configuration file${NC}"
 echo -e "${BLUE}  Path=${NC}$path"
@@ -82,7 +91,7 @@ echo -e "${BLUE}  Builder=${NC}$builder"
 echo -e "${BLUE}  Buildpack=${NC}$buildpack"
 
 # print the env variables
-echo -e "${BLUE} Env=${NC}"
+echo -e "${BLUE}  Env=${NC}"
 for e in $env; do
     echo -e "    $e"
 done
