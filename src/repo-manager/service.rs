@@ -76,7 +76,7 @@ impl GitRepoManager for GitRepoManagerService {
         Command::new("sh")
             .arg("-c")
             .arg(format!(
-                "ln -s {}/post-receive {}/hooks/post-receive",
+                "ln {}/post-receive {}/hooks/post-receive",
                 self.config.githook_base_path, new_repo_full_path,
             ))
             .output()
